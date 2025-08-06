@@ -128,8 +128,8 @@ ls -l ca.* mongodb.* mongo-truststore.jks
 
   **Step 2: Sign the certificate with SAN**
 
-  ```
-  bashCopyEditopenssl x509 -req -in mongodb.csr \
+  ```bash
+  openssl x509 -req -in mongodb.csr \
     -CA ca.crt -CAkey ca.key -CAcreateserial \
     -out mongodb.crt -days 3650 -sha256 \
     -extfile <(printf "subjectAltName=DNS:localhost,DNS:mongodb-tls,DNS:mongodb-tls.bankingnet")
@@ -176,7 +176,7 @@ Giving --tlsAllowConnectionsWithoutCertificates states that the server can conne
 
 ## 4. Connect MongoDB Client with TLS
 
-```
+```bash
 mongo --host localhost --port 27017 \
   --tls \
   --tlsCAFile ./certs/ca.crt
@@ -194,18 +194,14 @@ mongo --host localhost --port 27017 \
 
 - Check that MongoDB is using TLS:
 
-```
-bash
-
-
-CopyEdit
+```bash
 openssl s_client -connect localhost:27017 -CAfile ./certs/ca.crt
 ```
 
 - MongoDB log should show lines like:
 
-```
-csharpCopyEdit[conn1] connection accepted from 127.0.0.1:...
+```text
+[conn1] connection accepted from 127.0.0.1:...
 [conn1] connection authenticated using X.509
 ```
 
