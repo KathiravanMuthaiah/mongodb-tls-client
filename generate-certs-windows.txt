@@ -1,0 +1,44 @@
+# ===============================
+# MongoDB TLS Certificate Generator (Windows PowerShell)
+# ===============================
+
+$ErrorActionPreference = "Stop"
+
+# -------- Configurable Variables --------
+$CONTAINER_NAME = "mongodb-tls"
+$NETWORK_NAME = "bankingnet"
+$VALID_DAYS = 3650
+$TRUSTSTORE_PASS = "changeit"
+
+# -------- Folder Setup --------
+$certDir = ".\certs"
+if (!(Test-Path $certDir)) { New-Item -ItemType Directory -Path $certDir | Out-Null }
+Set-Location $certDir
+
+Write-Host "[INFO] Cleaning old certs..."
+Remove-Item -Force -ErrorAction SilentlyContinue ca.* mongodb.* mongo-truststore.jks
+
+# -------- 1. Generate CA Key & Certificate --------
+Write-Host "[INFO] Generating CA..."
+openssl genrsa -out ca.key 4096
+openssl req -x509 -new -nodes -key ca.key -sha256 -days $VALID_DAYS `
+    -out ca.crt `
+    -subj "/CN=MyMongoCA"
+
+# -------- 2. Generate Server Key --------
+Write-Host "[INFO] Generating MongoDB server key..."
+openssl genrsa -out mongodb.key 4096
+
+# -------- 3. Generate CSR with SAN --------
+Write-Host "[INFO] Generating CSR with SAN (localhost + Docker names)..."
+openssl req -new -key mongodb.key -out mongodb.csr `
+    -subj "/CN=$CONTAINER_NAME" `
+    -addext "subjectAltName=DNS:localhost,DNS:$CONTAINER_NAME,DNS:$CONTAINER_NAME.$NETWORK_NAME"
+
+# -------- 4. Sign Server Cert with CA and SAN (Inline) --------
+Write-Host "[INFO] Signing server cert with CA (inline SAN)..."
+openssl x509 -req -in mongodb.csr `
+    -CA ca.crt -CAkey ca.key -CAcreateserial `
+    -out mongodb.crt -days $VALID_DAYS -sha256 `
+    -extfile <(echo subjectAltName=DNS:localhost,DNS:$CONTAINER_NAME,DNS:$CONTAINER_NAME.$NETWORK_NAME)
+

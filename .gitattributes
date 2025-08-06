@@ -1,0 +1,22 @@
+# Handle line endings automatically for cross-platform compatibility
+* text=auto
+
+# Explicit handling for Python/java/other
+*.py text eol=lf diff=python
+*.java  text diff=java
+*.yml   text
+*.yaml  text
+*.md    text
+*.json  text
+
+# Treat shell scripts and Dockerfiles as text
+*.sh text eol=lf
+Dockerfile text eol=lf
+
+# Mark Markdown and documentation
+*.md text
+*.txt text
+*.rst text
+# Force language detection for GitHub linguist
+*.py linguist-language=Python
+*.md linguist-documentation

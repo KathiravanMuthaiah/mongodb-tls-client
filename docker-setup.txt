@@ -1,0 +1,11 @@
+do create a network to be used by both MongoDB server and client
+----------------------------------------------------------------
+docker network create --driver bridge bankingnet
+
+to connect to client
+--------------------
+docker run -it --rm --name mongo-client --network bankingnet -v $(pwd)/certs:/certs mongo:6.0 bash
+
+command to verify client connection using ca.crt not using the server pem file.
+-------------------------------------------------------------------------------
+mongosh --host mongodb-tls --port 27017 --tls --tlsCAFile /certs/ca.crt -u root -p rootpass --authenticationDatabase admin

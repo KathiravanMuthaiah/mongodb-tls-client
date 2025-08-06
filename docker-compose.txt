@@ -1,0 +1,30 @@
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb-tls
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpass
+    volumes:
+      - ./docker-volume/mongodb:/data/db
+      - ./certs/mongodb.pem:/etc/ssl/mongodb.pem:ro
+      - ./certs/ca.crt:/etc/ssl/ca.crt:ro
+    command: >
+      mongod --dbpath /data/db
+             --bind_ip_all
+             --tlsMode requireTLS
+             --tlsCertificateKeyFile /etc/ssl/mongodb.pem
+             --tlsCAFile /etc/ssl/ca.crt
+             --tlsAllowConnectionsWithoutCertificates
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - bankingnet
+      
+networks:
+  bankingnet:
+    external: true
+
